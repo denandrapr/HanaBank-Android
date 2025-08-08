@@ -29,6 +29,9 @@ android {
             )
         }
     }
+    buildFeatures {
+        buildConfig = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -67,4 +70,11 @@ dependencies {
     // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+}
+
+kapt {
+    correctErrorTypes = true
+    javacOptions {
+        option("-Adagger.hilt.disableModulesHaveInstallInCheck=true")
+    }
 }

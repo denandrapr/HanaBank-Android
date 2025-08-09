@@ -1,4 +1,4 @@
-HanaBank-Android
+# HanaBank-Android-Test
 Android application (take-home test) that displays a list of Pokémon cards with search, pagination, and local caching. Built using Kotlin + XML + MVVM, with Hilt, Coroutines/Flow, Room, and Retrofit/OkHttp.
 
 ✨ Key Features

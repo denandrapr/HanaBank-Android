@@ -6,4 +6,5 @@
     <string name="error_memuat_data">Error memuat data</string>
     <string name="ulang_lagi">Ulang lagi</string>
     <string name="cari_pokemon_mu">Cari Pokemon mu</string>
+    <string name="no_results_found">No results found</string>
 </resources>

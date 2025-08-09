@@ -1,26 +1,23 @@
 package com.example.denandra_hanabank_test.data.repository
 
-import com.example.denandra_hanabank_test.data.local.dao.PokemonCardDao
-import com.example.denandra_hanabank_test.data.mapper.toListPokemonEntity
-import com.example.denandra_hanabank_test.data.mapper.toListPokemonUI
 import com.example.denandra_hanabank_test.data.remote.api.ApiService
 import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHandler
 import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.IOException
 import javax.inject.Inject
 
 class PokemonRepository @Inject constructor(
-    private val api: ApiService,
-    private val dao: PokemonCardDao
+    private val api: ApiService
 ) {
-    fun observeCards(): Flow<List<PokemonCard>> =
-        dao.observeAll().map { it.map { data -> data.toListPokemonUI() } }
+    private val items = mutableListOf<PokemonCard>()
+    private val _cardsFlow = MutableStateFlow<List<PokemonCard>>(emptyList())
 
-    suspend fun getPokemon(page: Int, pageSize: Int) : ApiResultHandler<Int> {
+    fun observeCards(): Flow<List<PokemonCard>> = _cardsFlow
+
+    suspend fun getPokemon(page: Int, pageSize: Int): ApiResultHandler<Int> {
         return try {
-
             val response = api.getCards(page = page, pageSize = pageSize)
             if (!response.isSuccessful) {
                 return ApiResultHandler.Error(
@@ -28,14 +25,15 @@ class PokemonRepository @Inject constructor(
                     response.code()
                 )
             }
-            val list = response.body()?.data ?: emptyList()
-            val base = (page - 1) * pageSize
-            val time = System.currentTimeMillis()
-            dao.upsertAll(list.mapIndexed { i, c ->
-                c.toListPokemonEntity(base + i, page, time)
-            })
-            ApiResultHandler.Success(list.size)
 
+            val list = response.body()?.data ?: emptyList()
+
+            if (page == 1) items.clear()
+            items.addAll(list)
+
+            _cardsFlow.value = items.toList()
+
+            ApiResultHandler.Success(list.size)
         } catch (e: IOException) {
             ApiResultHandler.Error("No internet connection ${e.message}")
         } catch (e: Exception) {
@@ -43,7 +41,8 @@ class PokemonRepository @Inject constructor(
         }
     }
 
-    suspend fun cachedCount(): Int = dao.count()
-
-    suspend fun clearAll() = dao.clearAll()
+    fun clearAll() {
+        items.clear()
+        _cardsFlow.value = emptyList()
+    }
 }

@@ -11,8 +11,12 @@ import com.example.denandra_hanabank_test.databinding.ItemPokemonCardBinding
 
 class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val cards = mutableListOf<PokemonCard>()
+    private val allCards = mutableListOf<PokemonCard>() // master
+    private val cards = mutableListOf<PokemonCard>()     // visible
     private var showFooter = false
+    private var currentQuery: String? = null
+
+    var onFilterResult: ((isEmpty: Boolean, hasQuery: Boolean) -> Unit)? = null
 
     companion object {
         private const val TYPE_ITEM = 1
@@ -20,22 +24,46 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     fun submitList(newList: List<PokemonCard>) {
+        allCards.clear()
+        allCards.addAll(newList)
+        applyFilter()
+    }
+
+    fun setQuery(query: String?) {
+        currentQuery = query?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
+        applyFilter()
+    }
+
+    private fun applyFilter() {
+        val q = currentQuery
         cards.clear()
-        cards.addAll(newList)
+        if (q == null) {
+            cards.addAll(allCards)
+        } else {
+            cards.addAll(
+                allCards.filter { c ->
+                    (c.name?.contains(q, ignoreCase = true) == true) ||
+                            (c.evolvesFrom?.contains(q, ignoreCase = true) == true) ||
+                            (c.types?.any { it.contains(q, ignoreCase = true) } == true)
+                }
+            )
+        }
+        onFilterResult?.invoke(cards.isEmpty(), q != null)
         notifyDataSetChanged()
     }
 
     fun showLoadingFooter() {
         if (!showFooter) {
             showFooter = true
-            notifyItemInserted(itemCount)
+            notifyItemInserted(cards.size) // footer ada di index 'cards.size'
         }
     }
 
     fun hideLoadingFooter() {
         if (showFooter) {
+            val pos = cards.size
             showFooter = false
-            notifyItemRemoved(cards.size)
+            notifyItemRemoved(pos)
         }
     }
 

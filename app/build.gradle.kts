@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,7 +19,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "POKEMON_API_KEY", "\"${project.findProperty("POKEMON_API_KEY")}\"")
+
+        val localProps = Properties().apply {
+            load(rootProject.file("local.properties").inputStream())
+        }
+
+        // Inject values into BuildConfig
+        buildConfigField("String", "POKEMON_API_KEY", "\"${localProps.getProperty("POKEMON_API_KEY")}\"")
+        buildConfigField("String", "BASE_URL", "\"${localProps.getProperty("BASE_URL")}\"")
+
     }
 
     buildTypes {
@@ -30,6 +40,7 @@ android {
         }
     }
     buildFeatures {
+        viewBinding = true
         buildConfig = true
     }
     compileOptions {
@@ -51,6 +62,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.fragment.ktx)
 
     // Glide
     implementation(libs.glide)
@@ -66,10 +80,16 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.fragment)
 
     // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+
+    // Room
+    implementation(libs.room.runtime)
+    kapt(libs.room.compiler)
+    implementation(libs.room.ktx)
 }
 
 kapt {

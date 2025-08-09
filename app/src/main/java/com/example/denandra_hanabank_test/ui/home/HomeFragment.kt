@@ -142,13 +142,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
-    }
-
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-    }
+    private fun showLoading() { binding.progressBar.visibility = View.VISIBLE }
+    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
 
     private fun showErrorSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)

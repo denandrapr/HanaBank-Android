@@ -38,6 +38,14 @@ class HomeFragment : Fragment() {
 
         setupRecyclerView()
         observeData()
+        onClickButton()
+    }
+
+    private fun onClickButton() {
+        binding.btnRetry.setOnClickListener {
+            viewModel.loadCards()
+            binding.errorContainer.visibility = View.GONE
+        }
     }
 
     private fun observeData() {
@@ -60,12 +68,19 @@ class HomeFragment : Fragment() {
                             is ApiResultHandler.Success -> {
                                 hideLoading()
                                 homeAdapter.hideLoadingFooter()
+                                binding.errorContainer.visibility = View.GONE
                                 homeAdapter.submitList(result.data)
                             }
                             is ApiResultHandler.Error -> {
                                 hideLoading()
                                 homeAdapter.hideLoadingFooter()
-                                showErrorSnackbar(result.message)
+                                if (homeAdapter.itemCount == 0) {
+                                    binding.errorContainer.visibility = View.VISIBLE
+                                    binding.tvError.text = result.message
+                                } else {
+                                    binding.errorContainer.visibility = View.GONE
+                                    showErrorSnackbar(result.message)
+                                }
                             }
                         }
                     }

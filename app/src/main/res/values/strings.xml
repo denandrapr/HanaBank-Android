@@ -2,4 +2,8 @@
     <string name="app_name">Denandra-HanaBank-Test</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="img_desciption">img desciption</string>
+    <string name="error_memuat_data">Error memuat data</string>
+    <string name="ulang_lagi">Ulang lagi</string>
+    <string name="cari_pokemon_mu">Cari Pokemon mu</string>
 </resources>

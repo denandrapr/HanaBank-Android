@@ -1,13 +1,11 @@
 package com.example.denandra_hanabank_test.ui.home
 
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
+import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHandler
-import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import com.example.denandra_hanabank_test.databinding.FragmentHomeBinding
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,163 +22,133 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by viewModels()
     private val homeAdapter = HomeAdapter()
 
+    private var isLoading = false
+    private var isLastPage = false
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         observeData()
-        onClickButton()
-        setView()
-    }
+        setupActions()
 
-    private fun setView() {
-        binding.etSearch.setText(viewModel.query.value)
+        binding.etSearch.addTextChangedListener {
+            homeAdapter.setQuery(it.toString())
+        }
 
-        binding.etSearch.doOnTextChanged { text, _, _, _ ->
-            viewModel.onQueryChange(text?.toString().orEmpty())
+        homeAdapter.onFilterResult = { isEmpty, hasQuery ->
+            if (!isLoading && hasQuery && isEmpty) {
+                binding.errorContainer.visibility = View.VISIBLE
+                binding.btnRetry.visibility = View.GONE
+                binding.tvError.text = getString(R.string.no_results_found)
+            } else {
+                binding.errorContainer.visibility = View.GONE
+            }
         }
     }
 
-    private fun onClickButton() {
-        val shouldReset = homeAdapter.itemCount == 0
-        viewModel.loadCards(reset = shouldReset)
-
-        binding.errorContainer.isVisible = false
-        binding.progressBar.isVisible = true
+    private fun setupActions() {
+        binding.btnRetry.setOnClickListener {
+            viewModel.loadCards()
+            binding.errorContainer.visibility = View.GONE
+        }
     }
 
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+
                 launch {
                     viewModel.pokemonList.collectLatest { result ->
                         when (result) {
                             is ApiResultHandler.Loading -> {
-                                handlingResultLoading()
+                                isLoading = true
+                                if (viewModel.isInitialLoading.value) {
+                                    showLoading()
+                                    homeAdapter.hideLoadingFooter()
+                                } else {
+                                    hideLoading()
+                                    if (homeAdapter.itemCount > 0) {
+                                        homeAdapter.showLoadingFooter()
+                                    }
+                                }
                             }
+
                             is ApiResultHandler.Success -> {
-                                handlingResultSuccess(result)
+                                isLoading = false
+                                hideLoading()
+                                homeAdapter.hideLoadingFooter()
+                                homeAdapter.submitList(result.data)
+
+                                isLastPage = result.data.isNotEmpty() && (result.data.size % 8 != 0)
                             }
+
                             is ApiResultHandler.Error -> {
-                                handlingResultError(result)
+                                isLoading = false
+                                hideLoading()
+                                homeAdapter.hideLoadingFooter()
+
+                                if (homeAdapter.itemCount == 0) {
+                                    binding.errorContainer.visibility = View.VISIBLE
+                                    binding.tvError.text = result.message
+                                } else {
+                                    binding.errorContainer.visibility = View.GONE
+                                    showErrorSnackbar(result.message)
+                                }
                             }
                         }
                     }
                 }
                 launch {
-                    viewModel.isInitialLoading.collect { loading ->
-                        binding.progressBar.isVisible = loading
+                    viewModel.isInitialLoading.collectLatest { initial ->
+                        if (initial) showLoading() else hideLoading()
                     }
                 }
             }
         }
     }
 
-    private fun handlingResultSuccess(result: ApiResultHandler.Success<List<PokemonCard>>) {
-        val list = result.data
-        val isSearching = viewModel.query.value.isNotBlank()
-        val isInitial = viewModel.isInitialLoading.value
-
-        homeAdapter.hideLoadingFooter()
-
-        if (isInitial) {
-            binding.errorContainer.isVisible = false
-            if (list.isNotEmpty()) {
-                binding.rvPokemonCards.isVisible = true
-                homeAdapter.submitList(list)
-            }
-            return
-        }
-
-        if (list.isEmpty()) {
-            binding.rvPokemonCards.isVisible = false
-            binding.errorContainer.isVisible = true
-            binding.btnRetry.isVisible = !isSearching
-            binding.tvError.text = if (isSearching)
-                getString(R.string.data_not_found)
-            else
-                getString(R.string.error_memuat_data)
-        } else {
-            binding.errorContainer.isVisible = false
-            binding.rvPokemonCards.isVisible = true
-            homeAdapter.submitList(list)
-        }
-    }
-
-    private fun handlingResultLoading() {
-        val isInitial = viewModel.isInitialLoading.value
-        val isSearching = viewModel.query.value.isNotBlank()
-
-        if (isInitial) {
-            binding.errorContainer.isVisible = false
-            homeAdapter.hideLoadingFooter()
-        } else {
-            if (!isSearching && homeAdapter.itemCount > 0) {
-                homeAdapter.showLoadingFooter()
-            } else {
-                homeAdapter.hideLoadingFooter()
-            }
-        }
-    }
-
-    private fun handlingResultError(result: ApiResultHandler.Error) {
-        hideLoading()
-        homeAdapter.hideLoadingFooter()
-
-        val hasItems = homeAdapter.itemCount > 0
-
-        if (!hasItems) {
-            binding.errorContainer.isVisible = true
-            binding.rvPokemonCards.isVisible = false
-            binding.btnRetry.isVisible = true
-            binding.tvError.text = result.message
-        } else {
-            binding.errorContainer.isVisible = false
-            binding.rvPokemonCards.isVisible = true
-            showErrorSnackbar(result.message)
-        }
-    }
-
     private fun setupRecyclerView() {
-        val lm = LinearLayoutManager(requireContext())
-        binding.rvPokemonCards.layoutManager = lm
-        binding.rvPokemonCards.adapter = homeAdapter
+        val layoutManager = LinearLayoutManager(requireContext())
+        binding.rvPokemonCards.apply {
+            this.layoutManager = layoutManager
+            adapter = homeAdapter
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    if (dy <= 0) return
+                    if (isLoading || isLastPage) return
 
-        val threshold = 4
-        binding.rvPokemonCards.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                if (dy <= 0) return
-
-                val isSearching = viewModel.query.value.isNotBlank()
-                if (isSearching) return
-
-                val last = lm.findLastVisibleItemPosition()
-                val total = homeAdapter.itemCount
-                val nearEnd = last >= total - threshold
-                val cannotScrollFurther = !rv.canScrollVertically(1)
-
-                if (nearEnd && cannotScrollFurther) {
-                    viewModel.loadCards()
+                    val total = layoutManager.itemCount
+                    val last = layoutManager.findLastVisibleItemPosition()
+                    if (total <= last + 2) {
+                        viewModel.loadCards()
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
-    private fun showLoading() { binding.progressBar.isVisible = true }
-    private fun hideLoading() { binding.progressBar.isVisible = false }
+    private fun showLoading() {
+        binding.progressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
+    }
 
     private fun showErrorSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)

@@ -26,17 +26,17 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     fun showLoadingFooter() {
-        if (!showFooter) {
-            showFooter = true
-            notifyItemInserted(itemCount)
-        }
+        if (showFooter) return
+        val footerPos = cards.size
+        showFooter = true
+        notifyItemInserted(footerPos)
     }
 
     fun hideLoadingFooter() {
-        if (showFooter) {
-            showFooter = false
-            notifyItemRemoved(cards.size)
-        }
+        if (!showFooter) return
+        val footerPos = cards.size
+        showFooter = false
+        notifyItemRemoved(footerPos)
     }
 
     override fun getItemViewType(position: Int): Int {

@@ -1,5 +1,6 @@
 package com.example.denandra_hanabank_test.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHandler
@@ -77,6 +78,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
                 is ApiResultHandler.Error -> {
+                    Log.d("TAG ", "loadCards: $res")
                     _pokemonList.value = res
                 }
                 else -> Unit

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHandler
+import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import com.example.denandra_hanabank_test.databinding.FragmentHomeBinding
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -55,10 +56,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun onClickButton() {
-        binding.btnRetry.setOnClickListener {
-            viewModel.loadCards()
-            binding.errorContainer.visibility = View.GONE
-        }
+        val shouldReset = homeAdapter.itemCount == 0
+        viewModel.loadCards(reset = shouldReset)
+
+        binding.errorContainer.isVisible = false
+        binding.progressBar.isVisible = true
     }
 
     private fun observeData() {
@@ -71,18 +73,7 @@ class HomeFragment : Fragment() {
                                 handlingResultLoading()
                             }
                             is ApiResultHandler.Success -> {
-                                if (result.data.isEmpty()) {
-                                    binding.errorContainer.visibility = View.VISIBLE
-                                    binding.rvPokemonCards.visibility = View.GONE
-                                    binding.btnRetry.visibility = View.GONE
-                                    binding.tvError.text = getString(R.string.data_not_found)
-                                    return@collectLatest
-                                }
-                                binding.rvPokemonCards.visibility = View.VISIBLE
-                                hideLoading()
-                                homeAdapter.hideLoadingFooter()
-                                binding.errorContainer.visibility = View.GONE
-                                homeAdapter.submitList(result.data)
+                                handlingResultSuccess(result)
                             }
                             is ApiResultHandler.Error -> {
                                 handlingResultError(result)
@@ -99,14 +90,49 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun handlingResultSuccess(result: ApiResultHandler.Success<List<PokemonCard>>) {
+        val list = result.data
+        val isSearching = viewModel.query.value.isNotBlank()
+        val isInitial = viewModel.isInitialLoading.value
+
+        homeAdapter.hideLoadingFooter()
+
+        if (isInitial) {
+            binding.errorContainer.isVisible = false
+            if (list.isNotEmpty()) {
+                binding.rvPokemonCards.isVisible = true
+                homeAdapter.submitList(list)
+            }
+            return
+        }
+
+        if (list.isEmpty()) {
+            binding.rvPokemonCards.isVisible = false
+            binding.errorContainer.isVisible = true
+            binding.btnRetry.isVisible = !isSearching
+            binding.tvError.text = if (isSearching)
+                getString(R.string.data_not_found)
+            else
+                getString(R.string.error_memuat_data)
+        } else {
+            binding.errorContainer.isVisible = false
+            binding.rvPokemonCards.isVisible = true
+            homeAdapter.submitList(list)
+        }
+    }
+
     private fun handlingResultLoading() {
-        if (viewModel.isInitialLoading.value) {
-            showLoading()
+        val isInitial = viewModel.isInitialLoading.value
+        val isSearching = viewModel.query.value.isNotBlank()
+
+        if (isInitial) {
+            binding.errorContainer.isVisible = false
             homeAdapter.hideLoadingFooter()
         } else {
-            hideLoading()
-            if (homeAdapter.itemCount > 0) {
+            if (!isSearching && homeAdapter.itemCount > 0) {
                 homeAdapter.showLoadingFooter()
+            } else {
+                homeAdapter.hideLoadingFooter()
             }
         }
     }
@@ -114,45 +140,53 @@ class HomeFragment : Fragment() {
     private fun handlingResultError(result: ApiResultHandler.Error) {
         hideLoading()
         homeAdapter.hideLoadingFooter()
-        if (homeAdapter.itemCount == 0) {
-            binding.errorContainer.visibility = View.VISIBLE
+
+        val hasItems = homeAdapter.itemCount > 0
+
+        if (!hasItems) {
+            binding.errorContainer.isVisible = true
+            binding.rvPokemonCards.isVisible = false
+            binding.btnRetry.isVisible = true
             binding.tvError.text = result.message
         } else {
-            binding.errorContainer.visibility = View.GONE
+            binding.errorContainer.isVisible = false
+            binding.rvPokemonCards.isVisible = true
             showErrorSnackbar(result.message)
         }
     }
 
-    private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
+    private fun setupRecyclerView() {
+        val lm = LinearLayoutManager(requireContext())
+        binding.rvPokemonCards.layoutManager = lm
+        binding.rvPokemonCards.adapter = homeAdapter
+
+        val threshold = 4
+        binding.rvPokemonCards.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                if (dy <= 0) return
+
+                val isSearching = viewModel.query.value.isNotBlank()
+                if (isSearching) return
+
+                val last = lm.findLastVisibleItemPosition()
+                val total = homeAdapter.itemCount
+                val nearEnd = last >= total - threshold
+                val cannotScrollFurther = !rv.canScrollVertically(1)
+
+                if (nearEnd && cannotScrollFurther) {
+                    viewModel.loadCards()
+                }
+            }
+        })
     }
 
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-    }
+    private fun showLoading() { binding.progressBar.isVisible = true }
+    private fun hideLoading() { binding.progressBar.isVisible = false }
 
     private fun showErrorSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
             .setAction("Retry") { viewModel.loadCards() }
             .show()
-    }
-
-    private fun setupRecyclerView() {
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.rvPokemonCards.layoutManager = layoutManager
-        binding.rvPokemonCards.adapter = homeAdapter
-
-        binding.rvPokemonCards.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                if (dy <= 0) return
-                val lm = recyclerView.layoutManager as LinearLayoutManager
-                val last = lm.findLastVisibleItemPosition()
-                val total = homeAdapter.itemCount
-                if (last >= total - 3) {
-                    viewModel.loadCards()
-                }
-            }
-        })
     }
 
     override fun onDestroyView() {

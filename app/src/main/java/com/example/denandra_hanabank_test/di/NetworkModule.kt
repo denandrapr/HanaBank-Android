@@ -33,7 +33,6 @@ object NetworkModule {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         }
-        logging.redactHeader("X-Api-Key")
         val apiKeyInterceptor = Interceptor { chain ->
             val request = chain.request().newBuilder()
                 .addHeader("X-Api-Key", API_KEY)

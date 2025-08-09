@@ -6,21 +6,29 @@ import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHan
 import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import com.example.denandra_hanabank_test.data.repository.PokemonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     val repository: PokemonRepository
 ) : ViewModel() {
 
-    private val _pokemonList = MutableStateFlow<ApiResultHandler<List<PokemonCard>>>(ApiResultHandler.Loading)
+    private val _pokemonList =
+        MutableStateFlow<ApiResultHandler<List<PokemonCard>>>(ApiResultHandler.Loading)
     val pokemonList: StateFlow<ApiResultHandler<List<PokemonCard>>> = _pokemonList
 
     private val _isInitialLoading = MutableStateFlow(false)
     val isInitialLoading: StateFlow<Boolean> = _isInitialLoading
+
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query
 
     private var currentPage = 1
     private val pageSize = 8
@@ -29,15 +37,26 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repository.observeCards().collect {
-                _pokemonList.value = ApiResultHandler.Success(it)
+            repository.observeCards(
+                queryFlow = _query
+                    .debounce(300)
+                    .distinctUntilChanged()
+            ).collect { list ->
+                _pokemonList.value = ApiResultHandler.Success(list)
             }
         }
 
         loadCards()
     }
 
+    fun onQueryChange(q: String) {
+        _query.value = q
+    }
+
     fun loadCards(reset: Boolean = false) {
+        if (isLoading || isLastPage) return
+        isLoading = true
+
         viewModelScope.launch {
             if (reset) {
                 currentPage = 1
@@ -48,14 +67,18 @@ class HomeViewModel @Inject constructor(
             val hasCache = repository.cachedCount() > 0
             _isInitialLoading.value = !hasCache && currentPage == 1
 
-            _pokemonList.value = ApiResultHandler.Loading
-
             when (val res = repository.getPokemon(currentPage, pageSize)) {
                 is ApiResultHandler.Success -> {
                     val added = res.data
-                    if (added < pageSize) isLastPage = true else currentPage++
+                    if (added < pageSize) {
+                        isLastPage = true
+                    } else {
+                        currentPage++
+                    }
                 }
-                is ApiResultHandler.Error -> _pokemonList.value = res
+                is ApiResultHandler.Error -> {
+                    _pokemonList.value = res
+                }
                 else -> Unit
             }
 

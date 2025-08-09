@@ -9,8 +9,15 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PokemonCardDao {
 
-    @Query("SELECT * FROM pokemon_cards ORDER BY indexInResponse ASC")
-    fun observeAll(): Flow<List<PokemonCardEntity>>
+    @Query("""
+    SELECT * FROM pokemon_cards
+    WHERE (:q IS NULL OR :q = '' 
+           OR LOWER(name) LIKE '%' || :q || '%'
+           OR LOWER(COALESCE(REPLACE(types, '||', ' '), '')) LIKE '%' || :q || '%'
+           OR LOWER(COALESCE(evolvesFrom, '')) LIKE '%' || :q || '%')
+    ORDER BY indexInResponse ASC
+""")
+    fun observeAll(q: String): Flow<List<PokemonCardEntity>>
 
     @Upsert
     suspend fun upsertAll(items: List<PokemonCardEntity>)

@@ -8,39 +8,41 @@ data class PokemonCard(
     @SerializedName("name")
     val name: String,
     @SerializedName("supertype")
-    val supertype: String?,
+    val supertype: String? = null,
     @SerializedName("subtypes")
-    val subtypes: List<String>?,
+    val subtypes: List<String>? = null,
     @SerializedName("hp")
-    val hp: String?,
+    val hp: String? = null,
     @SerializedName("types")
     val types: List<String>?,
+    @SerializedName("evolvesFrom")
+    val evolvesFrom: String?,
     @SerializedName("evolvesTo")
-    val evolvesTo: List<String>?,
+    val evolvesTo: List<String>? = null,
     @SerializedName("rules")
-    val rules: List<String>?,
+    val rules: List<String>? = null,
     @SerializedName("attacks")
-    val attacks: List<Attack>?,
+    val attacks: List<Attack>? = null,
     @SerializedName("weaknesses")
-    val weaknesses: List<Weakness>?,
+    val weaknesses: List<Weakness>? = null,
     @SerializedName("retreatCost")
-    val retreatCost: List<String>?,
+    val retreatCost: List<String>? = null,
     @SerializedName("convertedRetreatCost")
-    val convertedRetreatCost: Int?,
+    val convertedRetreatCost: Int? = null,
     @SerializedName("set")
-    val set: SetInfo?,
+    val set: SetInfo? = null,
     @SerializedName("number")
-    val number: String?,
+    val number: String? = null,
     @SerializedName("artist")
-    val artist: String?,
+    val artist: String? = null,
     @SerializedName("rarity")
     val rarity: String?,
     @SerializedName("nationalPokedexNumbers")
-    val nationalPokedexNumbers: List<Int>?,
+    val nationalPokedexNumbers: List<Int>? = null,
     @SerializedName("legalities")
-    val legalities: Legalities?,
+    val legalities: Legalities? = null,
     @SerializedName("images")
     val images: ImageInfo?,
     @SerializedName("tcgplayer")
-    val tcgplayer: TcgPlayer?
+    val tcgplayer: TcgPlayer? = null
 )

@@ -10,7 +10,7 @@ data class PokemonCardEntity(
     val imageSmall: String?,
     val rarity: String?,
     val indexInResponse: Int,
-    val evolvesFrom: List<String>?,
+    val evolvesFrom: String?,
     val types: List<String>?,
     val page: Int,
     val updatedAt: Long

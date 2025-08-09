@@ -8,24 +8,10 @@ fun PokemonCardEntity.toListPokemonUI(): PokemonCard =
     PokemonCard(
         id = id,
         name = name,
-        supertype = null,
-        subtypes = null,
-        hp = null,
         types = types,
-        evolvesTo = evolvesFrom,
-        rules = null,
-        attacks = null,
-        weaknesses = null,
-        retreatCost = null,
-        convertedRetreatCost = null,
-        set = null,
-        number = null,
-        artist = null,
+        evolvesFrom = evolvesFrom,
         rarity = rarity,
-        nationalPokedexNumbers = null,
-        legalities = null,
-        images = ImageInfo(small = imageSmall, large = null),
-        tcgplayer = null
+        images = ImageInfo(small = imageSmall)
     )
 
 fun PokemonCard.toListPokemonEntity(indexInResponse: Int, page: Int, time: Long) =
@@ -34,7 +20,7 @@ fun PokemonCard.toListPokemonEntity(indexInResponse: Int, page: Int, time: Long)
         name = name,
         imageSmall = images?.small,
         rarity = rarity,
-        evolvesFrom = evolvesTo,
+        evolvesFrom = evolvesFrom,
         types = types,
         indexInResponse = indexInResponse,
         page = page,

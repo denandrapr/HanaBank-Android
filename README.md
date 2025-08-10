@@ -1,6 +1,12 @@
 # HanaBank-Android-Test
 Android application (take-home test) that displays a list of Pokémon cards with search, and pagination. Built using Kotlin + XML + MVVM, with Hilt, Coroutines/Flow, and Retrofit/OkHttp.
 
+## Features And UI
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2e3e6eee-8738-4619-9bbf-4855350227e7" width="30%" />
+  <img src="https://github.com/user-attachments/assets/33d42f27-9712-4640-8dc9-525abceba526" width="30%" />
+</p>
+
 ## ✨ Key Features
 - Card list with pagination (lazy load).
 - Search cards (query managed via StateFlow).
@@ -9,7 +15,7 @@ Android application (take-home test) that displays a list of Pokémon cards with
 
 ## 🧱 Architecture & Tech Stack
 - Architecture: MVVM + Repository pattern
-- ViewModel ⟷ Repository ⟷ (Remote + Local)
+- ViewModel ⟷ Repository ⟷ (Remote)
 - UI: XML
 - DI: Hilt
 - Concurrency: Kotlin Coroutines & Flow

@@ -6,4 +6,16 @@
     </style>
 
     <style name="Theme.DenandraHanaBankTest" parent="Base.Theme.DenandraHanaBankTest" />
+
+    <style name="CustomChipStyle" parent="Widget.MaterialComponents.Chip.Entry">
+        <item name="chipBackgroundColor">#000000</item>
+        <item name="android:textColor">#EDA606</item>
+        <item name="chipCornerRadius">16dp</item>
+        <item name="android:fontFamily">@font/lexend_medium</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
 </resources>

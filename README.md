@@ -27,6 +27,7 @@ Android application (take-home test) that displays a list of Pokémon cards with
 - Build: Gradle Kotlin DSL (build.gradle.kts)
 
 ## 📂 Folder Structure
+```
 app/
  ├── data/
  │    ├── remote/         # Retrofit API definitions & DTOs
@@ -39,7 +40,7 @@ app/
  │
  ├── di/                  # Hilt modules
  ├── utils/               # Helpers & extensions
-
+```
  ## 🚀 Setup & Run
  1.	Clone the repository
  2.	Add your API Key to local.properties

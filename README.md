@@ -44,5 +44,7 @@ app/
  ## 🚀 Setup & Run
  1.	Clone the repository
  2.	Add your API Key to local.properties
-``POKEMON_API_KEY=your_api_key_here
-BASE_URL=https://api.pokemontcg.io/v2/``
+```
+POKEMON_API_KEY=your_api_key_here
+BASE_URL=https://api.pokemontcg.io/v2/
+```

@@ -15,7 +15,7 @@ Android application (take-home test) that displays a list of Pokémon cards with
 
 ## 🧱 Architecture & Tech Stack
 - Architecture: MVVM + Repository pattern
-- ViewModel ⟷ Repository ⟷ (Remote + Local)
+- ViewModel ⟷ Repository ⟷ (Remote)
 - UI: XML
 - DI: Hilt
 - Concurrency: Kotlin Coroutines & Flow

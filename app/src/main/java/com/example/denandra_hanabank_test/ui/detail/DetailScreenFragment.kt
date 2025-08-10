@@ -98,8 +98,7 @@ class DetailScreenFragment : Fragment() {
                         val evo = card.evolvesFrom?.trim().orEmpty()
                         binding.tvEvolvesFrom.apply {
                             isVisible = evo.isNotEmpty()
-                            text = if (evo.isNotEmpty())
-                                getString(R.string.evolves_from, evo) else ""
+                            text = evo.ifEmpty { "-" }
                         }
 
                         val setName = card.set?.name.orEmpty()
@@ -141,7 +140,7 @@ class DetailScreenFragment : Fragment() {
     private fun createEvolveChip(textValue: String): Chip {
         val ctx = binding.root.context
         return Chip(ctx).apply {
-            text = ctx.getString(R.string.evolves_from, textValue)
+            text = textValue
             isClickable = false
             isCheckable = false
             isFocusable = false

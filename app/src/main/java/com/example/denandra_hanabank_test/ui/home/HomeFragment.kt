@@ -10,7 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHandler
@@ -45,6 +45,10 @@ class HomeFragment : Fragment() {
         observeData()
         setupActions()
 
+        handlingButtonAndCallback()
+    }
+
+    private fun handlingButtonAndCallback() {
         binding.etSearch.addTextChangedListener {
             homeAdapter.setQuery(it.toString())
         }
@@ -122,19 +126,32 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        val layoutManager = LinearLayoutManager(requireContext())
+        val grid = GridLayoutManager(requireContext(), 2)
+
+        grid.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return if (homeAdapter.getItemViewType(position) == 2) 2 else 1
+            }
+        }
+
         binding.rvPokemonCards.apply {
-            this.layoutManager = layoutManager
+            layoutManager = grid
             adapter = homeAdapter
+            setHasFixedSize(true)
+
+            clearOnScrollListeners()
+
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     if (dy <= 0) return
                     if (isLoading || isLastPage) return
 
-                    val total = layoutManager.itemCount
-                    val last = layoutManager.findLastVisibleItemPosition()
-                    if (total <= last + 2) {
+                    val lastVisible = grid.findLastVisibleItemPosition()
+                    val totalItems = homeAdapter.itemCount
+
+                    // Buffer 4 item sebelum akhir biar smooth di grid
+                    if (totalItems <= lastVisible + 4) {
                         viewModel.loadCards()
                     }
                 }

@@ -8,6 +8,8 @@ import com.bumptech.glide.Glide
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import com.example.denandra_hanabank_test.databinding.ItemPokemonCardBinding
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 
 class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -55,7 +57,7 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     fun showLoadingFooter() {
         if (!showFooter) {
             showFooter = true
-            notifyItemInserted(cards.size) // footer ada di index 'cards.size'
+            notifyItemInserted(cards.size)
         }
     }
 
@@ -87,13 +89,60 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is ItemVH) holder.bind(cards[position])
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         if (holder is ItemVH) {
-            val card = cards[position]
-            holder.binding.tvCardName.text = card.name
-            Glide.with(holder.itemView).load(card.images?.small).into(holder.binding.imgCard)
+            Glide.with(holder.itemView).clear(holder.binding.imgCard)
+            holder.binding.chipGroupTypes.removeAllViews()
+        }
+        super.onViewRecycled(holder)
+    }
+
+    inner class ItemVH(val binding: ItemPokemonCardBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(card: PokemonCard) = with(binding) {
+            Glide.with(itemView)
+                .load(card.images?.small)
+                .placeholder(R.drawable.img_error_api)
+                .error(R.drawable.img_error_api)
+                .into(imgCard)
+
+            tvCardName.text = card.name.ifEmpty {
+                "-"
+            }
+
+            chipGroupTypes.populateTypes(card.types)
+
+            val evo = card.evolvesFrom?.trim().orEmpty()
+            if (evo.isNotEmpty()) {
+                tvEvolvesFrom.visibility = View.VISIBLE
+                tvEvolvesFrom.text = itemView.context.getString(
+                    R.string.evolves_from,
+                    evo
+                )
+            } else {
+                tvEvolvesFrom.visibility = View.GONE
+            }
         }
     }
 
-    inner class ItemVH(val binding: ItemPokemonCardBinding) : RecyclerView.ViewHolder(binding.root)
     inner class FooterVH(itemView: View) : RecyclerView.ViewHolder(itemView)
+}
+
+private fun ChipGroup.populateTypes(types: List<String>?) {
+    removeAllViews()
+    types?.forEach { type ->
+        addView(createTypeChip(type))
+    }
+}
+
+private fun ChipGroup.createTypeChip(textValue: String): Chip {
+    return Chip(context).apply {
+        text = textValue
+        isClickable = false
+        isCheckable = false
+        isFocusable = false
+        setEnsureMinTouchTargetSize(false)
+    }
 }

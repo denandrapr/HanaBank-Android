@@ -14,4 +14,10 @@ interface ApiService {
         @Query("pageSize") pageSize: Int = 8
     ): Response<BaseResponse<PokemonCard>>
 
+    @GET("cards")
+    suspend fun searchCards(
+        @Query("q") query: String,
+        @Query("page") page: Int = 1,
+        @Query("pageSize") pageSize: Int = 8
+    ): Response<BaseResponse<PokemonCard>>
 }

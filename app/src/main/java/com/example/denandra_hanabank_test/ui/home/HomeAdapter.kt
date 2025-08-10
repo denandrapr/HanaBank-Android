@@ -1,24 +1,27 @@
 package com.example.denandra_hanabank_test.ui.home
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import com.example.denandra_hanabank_test.databinding.ItemPokemonCardBinding
 import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 
 class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val allCards = mutableListOf<PokemonCard>() // master
-    private val cards = mutableListOf<PokemonCard>()     // visible
+    private val allCards = mutableListOf<PokemonCard>()
+    private val cards = mutableListOf<PokemonCard>()
     private var showFooter = false
     private var currentQuery: String? = null
 
     var onFilterResult: ((isEmpty: Boolean, hasQuery: Boolean) -> Unit)? = null
+    var onItemClick: ((PokemonCard) -> Unit)? = null
 
     companion object {
         private const val TYPE_ITEM = 1
@@ -89,7 +92,11 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is ItemVH) holder.bind(cards[position])
+        if (holder is ItemVH) {
+            val card = cards[position]
+            holder.bind(card)
+            holder.itemView.setOnClickListener { onItemClick?.invoke(card) }
+        }
     }
 
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
@@ -112,33 +119,65 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 "-"
             }
 
-            chipGroupTypes.populateTypes(card.types)
+            chipGroupTypes.apply {
+                removeAllViews()
+                card.types?.forEach { type ->
+                    val chip = Chip(context).apply {
+                        text = type
+                        isClickable = false
+                        isCheckable = false
+                        isFocusable = false
+                        setEnsureMinTouchTargetSize(false)
+                        chipBackgroundColor = ColorStateList.valueOf(Color.parseColor("#000000"))
 
-            val evo = card.evolvesFrom?.trim().orEmpty().ifEmpty { "-" }
-            tvEvolvesFrom.visibility = View.VISIBLE
-            tvEvolvesFrom.text = itemView.context.getString(
-                R.string.evolves_from,
-                evo
-            )
+                        setTextColor(Color.parseColor("#EDA606"))
+                        typeface = ResourcesCompat.getFont(context, R.font.lexend)
+
+                        chipStrokeWidth = 0f
+                        chipStrokeColor = null
+                        val radius = 16f.dp(context)
+                        shapeAppearanceModel = shapeAppearanceModel
+                            .toBuilder()
+                            .setAllCornerSizes(radius)
+                            .build()
+                    }
+                    addView(chip)
+                }
+            }
+
+            chipGroupEvolves.apply {
+                removeAllViews()
+                val evo = card.evolvesFrom?.trim().orEmpty().ifEmpty { "-" }
+                addView(createEvolveChip(evo))
+                visibility = View.VISIBLE
+            }
+        }
+
+        private fun createEvolveChip(textValue: String): Chip {
+            val ctx = binding.root.context
+            return Chip(ctx).apply {
+                text = ctx.getString(R.string.evolves_from, textValue)
+                isClickable = false
+                isCheckable = false
+                isFocusable = false
+                setEnsureMinTouchTargetSize(false)
+
+                chipBackgroundColor = ColorStateList.valueOf(Color.parseColor("#000000"))
+                setTextColor(Color.WHITE)
+
+                chipStrokeWidth = 0f
+                chipStrokeColor = null
+                val radius = 16f.dp(ctx)
+                shapeAppearanceModel = shapeAppearanceModel.toBuilder()
+                    .setAllCornerSizes(radius)
+                    .build()
+            }
         }
     }
 
     inner class FooterVH(itemView: View) : RecyclerView.ViewHolder(itemView)
-}
 
-private fun ChipGroup.populateTypes(types: List<String>?) {
-    removeAllViews()
-    types?.forEach { type ->
-        addView(createTypeChip(type))
-    }
-}
-
-private fun ChipGroup.createTypeChip(textValue: String): Chip {
-    return Chip(context).apply {
-        text = textValue
-        isClickable = false
-        isCheckable = false
-        isFocusable = false
-        setEnsureMinTouchTargetSize(false)
+    private fun Float.dp(context: android.content.Context): Float {
+        return this * context.resources.displayMetrics.density
     }
 }

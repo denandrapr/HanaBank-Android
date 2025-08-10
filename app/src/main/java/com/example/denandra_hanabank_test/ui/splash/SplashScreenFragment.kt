@@ -32,7 +32,7 @@ class SplashScreenFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            delay(800)
+            delay(1800)
             navigateToHome()
         }
     }

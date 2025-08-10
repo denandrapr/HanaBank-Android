@@ -7,7 +7,7 @@
     <string name="ulang_lagi">Please Retry</string>
     <string name="cari_pokemon_mu">Search pokemon</string>
     <string name="no_results_found">No results found</string>
-    <string name="evolves_from">Evolves from: %1$s</string>
+    <string name="evolves_from">Evolves from %1$s</string>
     <string name="set_info_format">Set: %1$s · #%2$s/%3$s</string>
     <string name="artist_format">Artist: %1$s</string>
 </resources>

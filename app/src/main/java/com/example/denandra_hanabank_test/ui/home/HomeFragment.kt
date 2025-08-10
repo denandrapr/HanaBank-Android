@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.handler.ApiResultHandler
 import com.example.denandra_hanabank_test.databinding.FragmentHomeBinding
+import com.example.denandra_hanabank_test.ui.detail.DetailScreenFragment
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -62,6 +63,14 @@ class HomeFragment : Fragment() {
                 binding.errorContainer.visibility = View.GONE
             }
         }
+
+        homeAdapter.onItemClick = { card ->
+            val detail = DetailScreenFragment().newInstance(card.id)
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, detail)
+                .addToBackStack(null)
+                .commit()
+        }
     }
 
     private fun setupActions() {
@@ -74,7 +83,6 @@ class HomeFragment : Fragment() {
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-
                 launch {
                     viewModel.pokemonList.collectLatest { result ->
                         when (result) {
@@ -150,8 +158,7 @@ class HomeFragment : Fragment() {
                     val lastVisible = grid.findLastVisibleItemPosition()
                     val totalItems = homeAdapter.itemCount
 
-                    // Buffer 4 item sebelum akhir biar smooth di grid
-                    if (totalItems <= lastVisible + 4) {
+                    if (totalItems <= lastVisible + 1) {
                         viewModel.loadCards()
                     }
                 }

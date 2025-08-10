@@ -1,10 +1,13 @@
 package com.example.denandra_hanabank_test.ui.detail
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
@@ -17,7 +20,9 @@ import com.bumptech.glide.Glide
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.databinding.FragmentDetailScreenBinding
 import com.example.denandra_hanabank_test.ui.detail.DetailViewModel.Companion.ARG_CARD_ID
+import com.example.denandra_hanabank_test.utils.CommonUtils.dp
 import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -121,21 +126,37 @@ class DetailScreenFragment : Fragment() {
         }
     }
 
-    private fun com.google.android.material.chip.ChipGroup.bindChips(items: List<String>?) {
-        removeAllViews()
-        items?.forEach { text ->
-            addView(Chip(context).apply {
-                this.text = text
-                isClickable = false
-                isCheckable = false
-                isFocusable = false
-                setEnsureMinTouchTargetSize(false)
-            })
-        }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun ChipGroup.bindChips(types: List<String>?) {
+        removeAllViews()
+        types?.forEach { type ->
+            addView(createEvolveChip(type))
+        }
+    }
+
+    private fun createEvolveChip(textValue: String): Chip {
+        val ctx = binding.root.context
+        return Chip(ctx).apply {
+            text = ctx.getString(R.string.evolves_from, textValue)
+            isClickable = false
+            isCheckable = false
+            isFocusable = false
+            setEnsureMinTouchTargetSize(false)
+            chipBackgroundColor = ColorStateList.valueOf(Color.parseColor("#2A2A2A"))
+
+            setTextColor(Color.parseColor("#EDA606"))
+            typeface = ResourcesCompat.getFont(context, R.font.lexend)
+
+            chipStrokeWidth = 0f
+            chipStrokeColor = null
+            val radius = 16f.dp(ctx)
+            shapeAppearanceModel = shapeAppearanceModel.toBuilder()
+                .setAllCornerSizes(radius)
+                .build()
+        }
     }
 }

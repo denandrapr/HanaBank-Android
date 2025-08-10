@@ -11,6 +11,7 @@ import com.bumptech.glide.Glide
 import com.example.denandra_hanabank_test.R
 import com.example.denandra_hanabank_test.data.remote.model.pokemon.PokemonCard
 import com.example.denandra_hanabank_test.databinding.ItemPokemonCardBinding
+import com.example.denandra_hanabank_test.utils.CommonUtils.dp
 import com.google.android.material.chip.Chip
 
 class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -176,8 +177,4 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     inner class FooterVH(itemView: View) : RecyclerView.ViewHolder(itemView)
-
-    private fun Float.dp(context: android.content.Context): Float {
-        return this * context.resources.displayMetrics.density
-    }
 }

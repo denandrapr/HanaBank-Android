@@ -8,6 +8,14 @@
     <string name="cari_pokemon_mu">Search pokemon</string>
     <string name="no_results_found">No results found</string>
     <string name="evolves_from">Evolves from %1$s</string>
-    <string name="set_info_format">Set: %1$s · #%2$s/%3$s</string>
-    <string name="artist_format">Artist: %1$s</string>
+    <string name="set_info_format">%1$s · #%2$s/%3$s</string>
+    <string name="artist_format">%1$s</string>
+    <string name="hp">HP</string>
+    <string name="rarity">Rarity</string>
+    <string name="evolves_from_single">Evolves from</string>
+    <string name="set">Set</string>
+    <string name="artist">Artist</string>
+    <string name="weekness">Weekness</string>
+    <string name="attacks">Attacks</string>
+    <string name="information">Information</string>
 </resources>

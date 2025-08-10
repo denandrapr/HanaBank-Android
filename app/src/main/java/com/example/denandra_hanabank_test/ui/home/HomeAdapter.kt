@@ -114,16 +114,12 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
             chipGroupTypes.populateTypes(card.types)
 
-            val evo = card.evolvesFrom?.trim().orEmpty()
-            if (evo.isNotEmpty()) {
-                tvEvolvesFrom.visibility = View.VISIBLE
-                tvEvolvesFrom.text = itemView.context.getString(
-                    R.string.evolves_from,
-                    evo
-                )
-            } else {
-                tvEvolvesFrom.visibility = View.GONE
-            }
+            val evo = card.evolvesFrom?.trim().orEmpty().ifEmpty { "-" }
+            tvEvolvesFrom.visibility = View.VISIBLE
+            tvEvolvesFrom.text = itemView.context.getString(
+                R.string.evolves_from,
+                evo
+            )
         }
     }
 
